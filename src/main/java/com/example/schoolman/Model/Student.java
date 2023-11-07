@@ -19,6 +19,7 @@ public class Student {
         this.phoneNumber=phoneNumber;
         this.department=department;
     }
+
      public void setPhoneNumber(String phoneNumber){
         this.phoneNumber=phoneNumber;
      }
