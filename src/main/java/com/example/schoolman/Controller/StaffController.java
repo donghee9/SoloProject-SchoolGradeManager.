@@ -1,50 +1,46 @@
+// StaffController.java
 package com.example.schoolman.Controller;
 
-import com.example.schoolman.Model.Department;
 import com.example.schoolman.Model.Student;
 import com.example.schoolman.Service.StaffService;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-@Controller
+
+@RestController
+@RequestMapping("/students")
 public class StaffController {
 
-    StaffService staffService;
+    private final StaffService staffService;
 
-    StaffController(StaffService staffService) {
+    public StaffController(StaffService staffService) {
         this.staffService = staffService;
     }
 
-    public String enrollStudent() {
-        Student student = new Student("서경원", "dong0@naver.com", "01011112222",Department.BUSINESS);
-        String response = staffService.insertStudent(student, Department.valueOf("BUSINESS"));
+    @PostMapping
+    public ResponseEntity<String> enrollStudent(@RequestBody Student student) {
+        String response = staffService.insertStudent(student, student.getDepartment());
         String message = "학생등록 완료";
-        return response + message;
+        return ResponseEntity.ok(response + " " + message);
     }
 
-    public List studentList() {
-        return staffService.getStudentList();
+    @GetMapping
+    public ResponseEntity<List<Student>> listStudents() {
+        List<Student> students = staffService.getStudentList();
+        return ResponseEntity.ok(students);
     }
 
-    public String deleteStudent() {
-        String studentName = "seo";
-        String studentId = "20231001";
-        String phoneNumber = "01098881111";
-
-        return staffService.deleteStudent(studentId, studentName, phoneNumber);
+    @DeleteMapping
+    public ResponseEntity<String> removeStudent(@RequestBody String studentIdForDelete, String studentNameForDelete) {
+        staffService.deleteStudent(studentIdForDelete, studentNameForDelete);
+        return ResponseEntity.ok("삭제되었습니다.");
     }
 
-    public String updateStudentDetails() {
-        String studentId = "202300011";
-        String name = "서경원";
-        String newPhoneNumber = "01011112222";
-
-        staffService.updateStudent(studentId, name, newPhoneNumber);
-        return "학생의 전화번호가 업데이트 되었습니다: " + studentId;
+    @PutMapping
+    public ResponseEntity<String> modifyStudentDetails(@RequestBody String studentId, String studentName, @RequestParam String newPhoneNumber) {
+        staffService.putStudent(studentId, studentName, newPhoneNumber);
+        return ResponseEntity.ok("학생의 전화번호가 업데이트 되었습니다: " + studentId);
     }
 }
-
-
-
-
 

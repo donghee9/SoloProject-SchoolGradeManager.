@@ -1,33 +1,36 @@
 package com.example.schoolman.Model;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 @ToString
 @Getter
-public class Student {
+@Setter
+public class Student extends Person {
     String name;
     String email;
     String phoneNumber;
     String studentId;
     Department department;
-//Person 을 슈퍼클래스로 상속 받고 싶었는데 서비스에서 인자 값으로 받지를 못해서 못했습니다,,,
-    public Student(String name, String email, String phoneNumber, Department department){
-        //생성자 값을 Department department Or String department?
-        this.name=name;
-        this.email=email;
-        this.phoneNumber=phoneNumber;
-        this.department=department;
+
+
+    public Student(String name, String email, String phoneNumber, Department department) {
+        super(name, email, phoneNumber);
+        this.name = name;
+        this.email = email;
+        this.phoneNumber = formatPhoneNumber(phoneNumber);
+        this.department = department;
     }
 
-     public void setPhoneNumber(String phoneNumber){
-        this.phoneNumber=phoneNumber;
-     }
+    private String formatPhoneNumber(String rawNumber) {
+        return rawNumber.replaceAll("(\\d{3})(\\d{4})(\\d{4})", "$1-$2-$3");
+    }
 
-     public void setDepartment(Department department){
-        this.department=department;
-     }
-     public void setStudentId(String studentId){
-        this.studentId=studentId;
-     }
+    public static Student of(String name, String email, String phoneNumber, Department department) {
+        return new Student(name, email, phoneNumber, department);
+    }
+
 }
+
+

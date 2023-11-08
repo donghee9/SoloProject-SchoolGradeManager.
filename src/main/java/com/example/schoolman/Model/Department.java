@@ -1,4 +1,5 @@
 package com.example.schoolman.Model;
+
 public enum Department {
     // 이과
     COMPUTER_SCIENCE("Science"),

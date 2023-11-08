@@ -13,9 +13,9 @@ public interface StaffService {
     List<Student> getStudentList();
 
     //학적부 수정
-    void updateStudent(String studentId, String name, String newPhoneNumber);
+    void putStudent(String studentId, String studentName,String newPhoneNumber);
     //학적부 삭제
-    String deleteStudent(String studentId, String name, String phone);
+   void deleteStudent(String studentIdForDelete,String studentNameForDelete);
 
 }
 

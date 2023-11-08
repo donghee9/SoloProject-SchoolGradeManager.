@@ -1,97 +1,111 @@
 package com.example.schoolman.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.example.schoolman.Model.Department;
 import com.example.schoolman.Model.Student;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 @Service
-public class StaffServiceImpl implements StaffService{
-    List<Student> studentList= new ArrayList<>();
-    //map에 두개의 인자가 들어가는 이유
-    Map<String,Integer> departmentNumbers =new HashMap<>();
-    Map<Department,Integer> studentIdCounters =new HashMap<>();
+public class StaffServiceImpl implements StaffService {
+    private static final String YEAR = "2023";
+    private static final Logger LOGGER = LoggerFactory.getLogger(StaffServiceImpl.class);
+    List<Student> studentList = new ArrayList<>();
+    Map<String, Integer> departmentNumbers = new HashMap<>();
+    Map<Department, Integer> studentIdCounters = new HashMap<>();
 
 
-    public StaffServiceImpl(){
+    public StaffServiceImpl() {
         departmentNumbers.put("Science", 1);
         departmentNumbers.put("Commerce", 3);
         departmentNumbers.put("Arts", 5);
 
-        for(Department department :Department.values()){
-            studentIdCounters.put(department,1);
+        for (Department department : Department.values()) {
+            studentIdCounters.put(department, 1);
         }
         initializeListStudent();
 
     }
+
+
     private void initializeListStudent() {
-        studentList.add(createStudent("seo", "seo@example.com", "010-9888-1111", Department.COMPUTER_SCIENCE));
-        studentList.add(createStudent("kim", "kim@example.com", "010-1234-5678", Department.BUSINESS));
-        studentList.add(createStudent("park", "park@example.com", "010-8765-4321", Department.NURSING));
-        studentList.add(createStudent("lee", "lee@example.com", "010-5566-7788", Department.ART));
-        studentList.add(createStudent("choi", "choi@example.com", "010-6677-8899", Department.MATHEMATICS));
+
+        studentList.add(createStudent(new Student("seo", "seo@example.com", "010-9888-1111", Department.COMPUTER_SCIENCE)));
+        studentList.add(createStudent(new Student("kim", "kim@example.com", "010-1234-5678", Department.BUSINESS)));
+        studentList.add(createStudent(new Student("park", "park@example.com", "010-8765-4321", Department.NURSING)));
+        studentList.add(createStudent(new Student("lee", "lee@example.com", "010-5566-7788", Department.ART)));
+        studentList.add(createStudent(new Student("choi", "choi@example.com", "010-6677-8899", Department.MATHEMATICS)));
     }
 
-    //Person 변수를 Person name 으로 설정했더니 인자값으로 받지를 못함
-      private Student createStudent(String name, String email, String phone, Department department){
-        int departmentCounter = studentIdCounters.get(department);
-        String fixDepart= departmentNumbers.get(department.getCategory()).toString();
-        String studentId = "2023" + fixDepart + String.format("%02d", departmentCounter);
-        studentIdCounters.put(department, departmentCounter + 1);
 
-        Student newStudent =new Student(name,email,phone,department);
+    private Student createStudent(Student student) {
 
-        newStudent.setStudentId(studentId);
-        return newStudent;
+        int departmentCounter = studentIdCounters.get(student.getDepartment());
+        String fixDepart = departmentNumbers.get(student.getDepartment().getCategory()).toString();
+        String studentId = YEAR + fixDepart + String.format("%02d", departmentCounter);
+        studentIdCounters.put(student.getDepartment(), departmentCounter + 1);
+        student.setStudentId(studentId);
+        return student;
     }
 
 
     @Override
     public String insertStudent(Student student, Department department) {
-      int count= studentIdCounters.get(department);
-      String departPrefix = String.format("%04d", departmentNumbers.get(department.getCategory()));
-      String studentId= LocalDate.now().getYear()+departPrefix+count;
-      student.setStudentId(studentId);
-      studentIdCounters.put(department,count+1);
-
-      student.setDepartment(department);
-      studentList.add(student);
-      String name=student.getName();
-      String email=student.getEmail();
-      return String.format("Name: %s, Email: %s, Student ID: %s", student.getName(), student.getEmail(), studentId);
+        LOGGER.info("Inserting new student into department: {}", department);
+        int count = studentIdCounters.get(department);
+        String departPrefix = String.format("%04d", departmentNumbers.get(department.getCategory()));
+        String studentId = YEAR + departPrefix + count;
+        student.setStudentId(studentId);
+        studentIdCounters.put(department, count + 1);
+        student.setDepartment(department);
+        studentList.add(student);
+        String result = String.format("Name: %s, Email: %s, Student ID: %s", student.getName(), student.getEmail(), studentId);
+        LOGGER.info("New student inserted: {}", result);
+        return result;
     }
 
     @Override
     public List<Student> getStudentList() {
-        return studentList;
+        LOGGER.info("Retrieving student list. Current list size: {}", studentList.size());
+        return new ArrayList<>(studentList);
     }
 
     @Override
-    public void updateStudent(String studentId, String name, String newPhoneNumber) {
-        for(Student student :studentList){
-            if(student.getStudentId().equals(studentId)&&student.getName().equals(name)){
-                student.setPhoneNumber(newPhoneNumber);
+    public void putStudent(String studentId, String studentName, String newPhoneNumber) {
+        LOGGER.info("Updating phone number for student ID: {}, Name: {}", studentId, studentName);
+        boolean studentFound = false;
+        for (Student studentInList : studentList) {
+            if (Helper.isIdAndNamed(studentId, studentName, studentInList)) {
+                studentInList.setPhoneNumber(newPhoneNumber);
+                studentFound = true;
+                LOGGER.info("Phone number updated for student ID: {}, Name: {}", studentId, studentName);
                 break;
             }
         }
-
+        if (!studentFound) {
+            LOGGER.warn("No student found to update phone number for ID: {}, Name: {}", studentId, studentName);
+        }
     }
 
-    @Override
-    public String deleteStudent(String studentId, String name, String rawPhoneNumber) {
-        String formattedPhoneNumber = formatPhoneNumber(rawPhoneNumber);
-        studentList.removeIf(student ->
-                student.getStudentId().equals(studentId) &&
-                        student.getName().equals(name) &&
-                        student.getPhoneNumber().equals(formattedPhoneNumber)
-        );
-        return formattedPhoneNumber;
-    }
-    private String formatPhoneNumber(String rawNumber) {
-        return rawNumber.replaceAll("(\\d{3})(\\d{4})(\\d{4})", "$1-$2-$3");
+    public void deleteStudent(String studentIdForDelete, String studentNameForDelete) {
+        Student toRemove = null;
+        for (Student student : studentList) {
+            if (Helper.isIdAndNamed(studentIdForDelete, studentNameForDelete, student)) {
+                toRemove = student;
+                LOGGER.info("Deleting student with ID: {} and Name: {}", studentIdForDelete, studentNameForDelete);
+                break;
+            }
+        }
+        if (toRemove != null) {
+            studentList.remove(toRemove);
+            LOGGER.info("Student removed successfully");
+        } else {
+            LOGGER.info("No student found with ID: {} and Name: {}", studentIdForDelete, studentNameForDelete);
+        }
     }
 }
+
+
